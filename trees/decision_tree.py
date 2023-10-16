@@ -1,7 +1,8 @@
-import numpy as np
-import pandas as pd
-from sklearn.model_selection import train_test_split
 from typing import Optional
+
+import numpy as np
+
+from model_carcass import Model
 
 
 class Node:
@@ -29,7 +30,7 @@ class Node:
         return f'Node(feature={self.feature}, threshold={self.threshold}, gini={self.gini})'
 
 
-class DecisionTree:
+class DecisionTree(Model):
 
     def __init__(self, max_depth: int = 5, min_samples_leaf: int = 3):
         self.max_depth = max_depth
@@ -38,11 +39,40 @@ class DecisionTree:
         self.current_depth = 0
         self.root = None
 
-    def fit(self, X, y):
+    def fit(self, X: np.ndarray, y: np.ndarray) -> None:
+        """
+        Creates a list of not used features.
+
+        Parameters
+        __________
+            X : np.ndarray
+                Input array with features.
+            y : np.ndarray
+                Array of binary target values.
+
+        Returns
+        _______
+            None
+        """
         self.not_used_features = list(X)
 
-    def split(self, X, y):
+    def split(self, X: np.ndarray, y: np.ndarray) -> None:
+        """
+        Calculates gini impurity per feature.
+        TODO: Implement recursive splits according to lowest gini impurity results.
 
+        Parameters
+        __________
+            X : pandas.DataFrame
+                Input dataframe with features.
+            y : pandas.Series
+                Vector of binary target values.
+
+        Returns
+        _______
+            None
+
+        """
         gini_per_feature = {}
         for feature in self.not_used_features:
 
@@ -55,10 +85,6 @@ class DecisionTree:
                 for idx in range(len(distinct_values_list) - 1):
                     p_sum_less = 0
                     median = (distinct_values_list[idx] + distinct_values_list[idx + 1]) / 2
-
-                    # print(median)
-                    # print(distinct_values_list)
-                    # print(feature)
 
                     less_than_median = sorted_data.loc[sorted_data[feature] < median, 'y'].value_counts()
                     values_less = sum(less_than_median)
@@ -91,14 +117,12 @@ class DecisionTree:
                             gini_per_feature[feature] = (gini, median, values_before_median, values_after_median)
 
             else:
-                raise ValueError('Ti che suka ahuel, davai mne number')
+                raise ValueError('Feature value is not a number!')
 
         gini_per_feature = dict(sorted(gini_per_feature.items(), key=lambda item: item[1]))
 
         for feature in self.not_used_features:
             current_best_feature = next(iter(gini_per_feature))
-            # print(current_best_feature)
-            # print(best_feature_threshold)
 
             if self.root is None:
                 self.root = Node(
